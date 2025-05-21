@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Welcome to MultiMart</title>
+    <style type="text/css">
+      body {
+        margin: 0;
+        padding: 0;
+        min-width: 100%;
+        font-family: Arial, sans-serif;
+        font-size: 16px;
+        line-height: 1.5;
+        background-color: #fafafa;
+        color: #222222;
+      }
+
+      h1 {
+        font-size: 24px;
+        font-weight: 700;
+        line-height: 1.25;
+        margin: 0 0 24px 0;
+        text-align: center;
+      }
+
+      table td {
+        vertical-align: top;
+      }
+
+      .email-wrapper {
+        max-width: 600px;
+        margin: 0 auto;
+        background-color: #ffffff;
+      }
+
+      .email-header {
+        background-color: #0070f3;
+        color: #ffffff;
+        padding: 24px;
+        text-align: center;
+      }
+
+      .email-body {
+        padding: 24px;
+        background-color: #ffffff;
+      }
+
+      .email-footer {
+        background-color: #f0f0f0;
+        padding: 24px;
+        text-align: center;
+        font-size: 14px;
+        color: #555555;
+      }
+
+      .button {
+        display: inline-block;
+        background-color: #0070f3;
+        color: #ffffff;
+        font-size: 16px;
+        font-weight: 700;
+        text-align: center;
+        text-decoration: none;
+        padding: 12px 24px;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="email-wrapper">
+      <div class="email-header">
+        <h1>Welcome to MultiMart</h1>
+      </div>
+      <div class="email-body">
+        <p>Hi <%= name %>,</p>
+        <p>
+          Welcome to <strong>MultiMart</strong> — we’re excited to have you on
+          board!
+        </p>
+        <p>
+          To complete your registration, please use the activation code below:
+        </p>
+        <h2><%= otp %></h2>
+        <p>
+          Enter this code on the activation page within the next
+          <strong>5 minutes</strong> to activate your account.
+        </p>
+        <p>
+          Didn’t sign up for a MultiMart account? No worries — just ignore this
+          email.
+        </p>
+        <p>
+          Need help? Reach out to us anytime at
+          <a href="mailto:support@multimart.com">support@multimart.com</a>.
+        </p>
+        <p>Thank you,<br />The MultiMart Team</p>
+      </div>
+      <div class="email-footer">
+        &copy; 2025 MultiMart. All rights reserved.
+      </div>
+    </div>
+  </body>
+</html>
