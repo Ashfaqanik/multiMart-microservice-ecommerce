@@ -2,8 +2,13 @@
   "name": "@./auth-service",
   "version": "0.0.1",
   "private": true,
+  "scripts": {
+    "dev": "node src/main.ts"
+  },
   "nx": {
     "name": "auth-service",
+    "projectType": "application",
+    "sourceRoot": "auth-service/src",
     "targets": {
       "build": {
         "executor": "@nx/esbuild:esbuild",
