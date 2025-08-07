@@ -1,7 +1,12 @@
 import { AppError } from "./";
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 
-export const errorMiddleware = (err: Error, req: Request, res: Response) => {
+export const errorMiddleware = (
+  err: Error,
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   // Check if the error is an instance of a specific error class
   if (err instanceof AppError) {
     console.log(`Error ${req.method} ${req.url}: ${err.message}`);
