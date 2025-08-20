@@ -1,0 +1,27 @@
+{
+  "name": "customer-ui",
+  "projectType": "application",
+  "sourceRoot": "apps/customer-ui/src",
+  "targets": {
+    "dev": {
+      "executor": "@nx/next:dev",
+      "options": {
+        "root": "apps/customer-ui"
+      }
+    },
+    "build": {
+      "executor": "@nx/next:build",
+      "options": {
+        "root": "apps/customer-ui",
+        "outputPath": "dist/apps/customer-ui"
+      }
+    },
+    "serve": {
+      "executor": "@nx/next:server",
+      "options": {
+        "buildTarget": "customer-ui:build"
+      }
+    }
+  },
+  "tags": []
+}

@@ -11,9 +11,9 @@ import {
   verifyOtp,
 } from "../utils/authHelper";
 import prisma from "../../../../packages/libs/prisma";
-import { AuthError, validationError } from "../../../../packages/error-handler";
+import { AuthError, ValidationError } from "../../../../packages/error-handler";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
+import jwt, { JsonWebTokenError } from "jsonwebtoken";
 import { setCookie } from "../utils/cookies/setCookie";
 
 //Register user
@@ -29,7 +29,7 @@ export const userRegistration = async (
     // Check if the email already exists
     const existingUser = await prisma.users.findUnique({ where: { email } });
     if (existingUser) {
-      return next(new validationError("User already exists", 400));
+      return next(new ValidationError("User already exists", 400));
     }
     await checkOtpRestrictions(email, next);
     await trackOtpRequests(email, next);
@@ -52,12 +52,12 @@ export const verifyUser = async (
     const { email, otp, password, name } = req.body;
 
     if (!email || !otp || !password || !name) {
-      return next(new validationError("Missing required fields", 400));
+      return next(new ValidationError("Missing required fields", 400));
     }
 
     const existingUser = await prisma.users.findUnique({ where: { email } });
     if (existingUser) {
-      return next(new validationError("User already exists!", 404));
+      return next(new ValidationError("User already exists!", 404));
     }
 
     await verifyOtp(email, otp, next);
@@ -86,10 +86,10 @@ export const loginUser = async (
   next: NextFunction
 ) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, rememberMe } = req.body; // <-- get it here
 
     if (!email || !password) {
-      return next(new validationError("Email and password are required", 400));
+      return next(new ValidationError("Email and password are required", 400));
     }
 
     const user = await prisma.users.findUnique({ where: { email } });
@@ -98,26 +98,37 @@ export const loginUser = async (
     }
 
     if (!user.password) {
-      return next(new validationError("Invalid password", 401));
+      return next(new ValidationError("Invalid password", 401));
     }
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       return next(new AuthError("Invalid password"));
     }
+
+    // Access token always short-lived
     const accessToken = jwt.sign(
       { id: user.id, role: "user" },
       process.env.ACCESS_TOKEN_SECRET as string,
       { expiresIn: "15m" }
     );
 
+    // Refresh token expiry depends on rememberMe
+    const refreshExpiry = rememberMe ? "30d" : "1d";
     const refreshToken = jwt.sign(
       { id: user.id, role: "user" },
       process.env.REFRESH_TOKEN_SECRET as string,
-      { expiresIn: "7d" }
+      { expiresIn: refreshExpiry }
     );
-    //store refresh token and access token in database
-    setCookie(res, "refreshToken", refreshToken);
-    setCookie(res, "accessToken", accessToken);
+
+    // Set cookies with correct expiry
+    setCookie(res, "accessToken", accessToken, {
+      maxAge: 15 * 60 * 1000,
+    });
+
+    setCookie(res, "refreshToken", refreshToken, {
+      maxAge: rememberMe ? 30 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000,
+    });
+
     res.status(200).json({
       message: "Login successful",
       user: {
@@ -126,6 +137,70 @@ export const loginUser = async (
         email: user.email,
       },
       accessToken,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+//Refresh user token
+export const refreshUserToken = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const refreshToken = req.cookies.refreshToken;
+    if (!refreshToken) {
+      return new ValidationError(
+        "UnAuthorized! No refresh token provided",
+        401
+      );
+    }
+    const decoded = jwt.verify(
+      refreshToken,
+      process.env.REFRESH_TOKEN_SECRET as string
+    ) as { id: string; role: string };
+
+    if (!decoded || !decoded.id || !decoded.role) {
+      return new JsonWebTokenError("Invalid refresh token");
+    }
+
+    const user = await prisma.users.findUnique({ where: { id: decoded.id } });
+    if (!user) {
+      return new AuthError("User not found");
+    }
+    const newAccessToken = jwt.sign(
+      { id: user.id, role: "user" },
+      process.env.ACCESS_TOKEN_SECRET as string,
+      { expiresIn: "15m" }
+    );
+    setCookie(res, "accessToken", newAccessToken);
+    res.status(201).json({
+      success: true,
+      message: "Token refreshed successfully",
+      accessToken: newAccessToken,
+    });
+  } catch (error) {
+    if (error instanceof jwt.JsonWebTokenError) {
+      return next(new AuthError("Invalid refresh token"));
+    }
+    next(error);
+  }
+};
+
+// Get logged-in user details
+export const getLoggedInUser = async (
+  req: any,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const user = req.user;
+
+    res.status(201).json({
+      success: true,
+      user,
     });
   } catch (error) {
     next(error);
@@ -156,20 +231,25 @@ export const resetUserPassword = async (
     const { email, newPassword } = req.body;
 
     if (!email || !newPassword) {
-      return next(new validationError("Missing required fields", 400));
+      return next(new ValidationError("Missing required fields", 400));
     }
     const user = await prisma.users.findUnique({ where: { email } });
     if (!user) {
-      return next(new validationError("User not found", 404));
+      return next(new ValidationError("User not found", 404));
     }
 
-    const isSamePassword = await bcrypt.compare(newPassword, user.password!);
-    if (isSamePassword) {
+    if (user.password && (await bcrypt.compare(newPassword, user.password))) {
       return next(
-        new validationError(
+        new ValidationError(
           "New password cannot be the same as old password",
           400
         )
+      );
+    }
+
+    if (newPassword.length < 6) {
+      return next(
+        new ValidationError("Password must be at least 6 characters long", 400)
       );
     }
 

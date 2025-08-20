@@ -23,7 +23,7 @@ export class NotFoundError extends AppError {
     super(message, 404);
   }
 }
-export class validationError extends AppError {
+export class ValidationError extends AppError {
   constructor(message = "Invalid request data", details?: any) {
     super(message, 400, true, details);
   }

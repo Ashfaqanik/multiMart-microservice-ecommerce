@@ -48,3 +48,7 @@ test-output
 .github/instructions/nx.instructions.md
 
 /generated/prisma
+
+# Next.js
+.next
+out

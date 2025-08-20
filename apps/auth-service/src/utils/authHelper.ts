@@ -1,4 +1,4 @@
-import { validationError } from "../../../../packages/error-handler";
+import { ValidationError } from "../../../../packages/error-handler";
 import crypto from "crypto";
 import redis from "../../../../packages/libs/redis";
 import { sendEmail } from "./sendEmail";
@@ -18,10 +18,10 @@ export const validateRegistrationData = (
     !password ||
     (userType === "seller" && (!phone_number || !country))
   ) {
-    throw new validationError(`Missing required fields`);
+    throw new ValidationError(`Missing required fields`);
   }
   if (!emailRegex.test(email)) {
-    throw new validationError(`Invalid email format`);
+    throw new ValidationError(`Invalid email format`);
   }
 };
 
@@ -31,21 +31,21 @@ export const checkOtpRestrictions = async (
 ) => {
   if (await redis.get(`otp_lock:${email}`)) {
     return next(
-      new validationError(
+      new ValidationError(
         `Account locked due to too many attempts! Try again after 30 minutes`
       )
     );
   }
   if (await redis.get(`otp_spam_lock:${email}`)) {
     return next(
-      new validationError(
+      new ValidationError(
         `Too many requests! Try again after 1 hour before requesting another OTP`
       )
     );
   }
   if (await redis.get(`otp_cooldown:${email}`)) {
     return next(
-      new validationError(
+      new ValidationError(
         `Please wait for 1 minute before requesting another OTP`
       )
     );
@@ -59,7 +59,7 @@ export const trackOtpRequests = async (email: string, next: NextFunction) => {
   if (otpRequests >= 2) {
     await redis.set(`otp_spam_lock:${email}`, "locked", "EX", 3600); //Lock for 1 hour
     return next(
-      new validationError(`Too many requests! Try again after 1 hour`)
+      new ValidationError(`Too many requests! Try again after 1 hour`)
     );
   }
   await redis.set(otpRequestKey, otpRequests + 1, "EX", 60); //Increment request count and set expiration to 1 minute
@@ -83,7 +83,7 @@ export const verifyOtp = async (
 ) => {
   const storedOtp = await redis.get(`otp:${email}`);
   if (!storedOtp) {
-    return next(new validationError("OTP expired or not found", 400));
+    return next(new ValidationError("OTP expired or not found", 400));
   }
 
   const failedAttempts = parseInt(
@@ -94,7 +94,7 @@ export const verifyOtp = async (
     if (failedAttempts >= 2) {
       await redis.set(`otp_lock:${email}`, "locked", "EX", 1800); // Lock for 30 min
       await redis.del(`otp_failed_attempts:${email}`);
-      throw new validationError(
+      throw new ValidationError(
         "Account locked due to too many attempts! Try again after 30 minutes",
         403
       );
@@ -106,7 +106,7 @@ export const verifyOtp = async (
       "EX",
       300
     ); // 5 min expiration
-    throw new validationError(
+    throw new ValidationError(
       `Incorrect OTP. ${2 - failedAttempts} attempts left`,
       400
     );
@@ -132,14 +132,14 @@ export const handleForgotPassword = async (
     const { email } = req.body;
 
     if (!email) {
-      throw new validationError("Email is required", 400);
+      throw new ValidationError("Email is required", 400);
     }
 
     const user =
       userType === "user" &&
       (await prisma.users.findUnique({ where: { email } }));
     if (!user) {
-      throw new validationError(`${userType} not found`, 404);
+      throw new ValidationError(`${userType} not found`, 404);
     }
     await checkOtpRestrictions(email, next);
     await trackOtpRequests(email, next);
@@ -161,7 +161,7 @@ export const verifyForgotPasswordOtp = async (
     const { email, otp } = req.body;
 
     if (!email || !otp) {
-      return next(new validationError("Email and OTP are required", 400));
+      return next(new ValidationError("Email and OTP are required", 400));
     }
 
     await verifyOtp(email, otp, next);
