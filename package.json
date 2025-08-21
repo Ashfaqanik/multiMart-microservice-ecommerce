@@ -6,7 +6,8 @@
     "generate": "prisma generate",
     "dev": "npm run generate && npx nx run-many --target=serve --all",
     "auth-docs": "node apps/auth-service/src/swagger.js",
-    "customer-ui": "npx nx run-many --target=serve --all --projects=customer-ui"
+    "customer-ui": "npx nx run-many --target=serve --all --projects=customer-ui",
+    "seller-ui": "npx nx run-many --target=serve --all --projects=seller-ui"
   },
   "private": true,
   "prisma": {

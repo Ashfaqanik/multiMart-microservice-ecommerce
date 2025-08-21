@@ -14,6 +14,9 @@
     },
     {
       "path": "./apps/customer-ui"
+    },
+    {
+      "path": "./apps/seller-ui"
     }
   ]
 }

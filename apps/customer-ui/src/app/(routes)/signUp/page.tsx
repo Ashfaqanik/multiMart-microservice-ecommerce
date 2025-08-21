@@ -235,6 +235,16 @@ const SignUp = () => {
             {serverError && (
               <p className="text-red-500 text-sm mt-2">{serverError} </p>
             )}
+            {/* Login Link */}
+            <p className="text-center text-sm text-gray-600 mt-6">
+              Already have an account?{" "}
+              <a
+                href="/login"
+                className="text-green-600 font-medium hover:underline"
+              >
+                Login
+              </a>
+            </p>
           </form>
         ) : (
           <div>
@@ -322,16 +332,6 @@ const SignUp = () => {
             )}
           </div>
         )}
-        {/* Sign Up Link */}
-        <p className="text-center text-sm text-gray-600 mt-6">
-          Already have an account?{" "}
-          <a
-            href="/login"
-            className="text-green-600 font-medium hover:underline"
-          >
-            Login
-          </a>
-        </p>
       </div>
     </div>
   );

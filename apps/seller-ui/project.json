@@ -1,0 +1,27 @@
+{
+  "name": "seller-ui",
+  "projectType": "application",
+  "sourceRoot": "apps/seller-ui/src",
+  "targets": {
+    "dev": {
+      "executor": "@nx/next:dev",
+      "options": {
+        "root": "apps/seller-ui"
+      }
+    },
+    "build": {
+      "executor": "@nx/next:build",
+      "options": {
+        "root": "apps/seller-ui",
+        "outputPath": "dist/apps/seller-ui"
+      }
+    },
+    "serve": {
+      "executor": "@nx/next:server",
+      "options": {
+        "buildTarget": "seller-ui:build"
+      }
+    }
+  },
+  "tags": []
+}
