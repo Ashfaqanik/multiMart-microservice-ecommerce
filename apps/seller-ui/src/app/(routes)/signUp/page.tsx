@@ -1,22 +1,23 @@
 "use client";
-import { useRouter } from "next/navigation";
 import React, { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useMutation } from "@tanstack/react-query";
 import axios, { AxiosError } from "axios";
 import { countries } from "../../utils/countries";
+import CreateShop from "../../components/modules/createShop";
+import StripeLogo from "apps/seller-ui/src/assets/svg/stripe-logo";
 
 const SignUp = () => {
   const [activeStep, setActiveStep] = useState(1);
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
-  const router = useRouter();
   const [canResend, setCanResend] = useState(false);
   const [showOtp, setShowOtp] = useState(false);
   const [timer, setTimer] = useState(60);
   const [otp, setOtp] = useState(["", "", "", ""]);
-  const [userData, setUserData] = useState<FormData | null>(null);
+  const [sellerData, setSellerData] = useState<FormData | null>(null);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const [sellerId, setSellerId] = useState("");
 
   const {
     register,
@@ -39,13 +40,13 @@ const SignUp = () => {
   const signUpMutation = useMutation({
     mutationFn: async (data: FormData) => {
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_SERVER_URI}/api/user-registration`,
+        `${process.env.NEXT_PUBLIC_SERVER_URI}/api/seller-registration`,
         data
       );
       return response.data;
     },
-    onSuccess: (_, formData) => {
-      setUserData(formData);
+    onSuccess: (_, variables) => {
+      setSellerData(variables);
       setShowOtp(true);
       setCanResend(false);
       setTimer(60);
@@ -69,18 +70,19 @@ const SignUp = () => {
   });
   const verifyOtpMutation = useMutation({
     mutationFn: async () => {
-      if (!userData) return;
+      if (!sellerData) return;
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_SERVER_URI}/api/verify-user`,
+        `${process.env.NEXT_PUBLIC_SERVER_URI}/api/verify-seller`,
         {
-          ...userData,
+          ...sellerData,
           otp: otp.join(""),
         }
       );
       return response.data;
     },
-    onSuccess: () => {
-      router.push("/login");
+    onSuccess: (data) => {
+      setSellerId(data?.seller?.id);
+      setActiveStep(2);
     },
     onError: (error: AxiosError) => {
       if (error.response) {
@@ -96,8 +98,8 @@ const SignUp = () => {
     },
   });
   const resendOtp = () => {
-    if (userData) {
-      signUpMutation.mutate(userData);
+    if (sellerData) {
+      signUpMutation.mutate(sellerData);
       startResendTimer();
     }
   };
@@ -110,6 +112,21 @@ const SignUp = () => {
     }
   };
 
+  const connectStripe = async () => {
+    try {
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_SERVER_URI}/api/connect-stripe`,
+        {
+          sellerId,
+        }
+      );
+      if (response.data.url) {
+        window.location.href = response.data.url;
+      }
+    } catch (error) {
+      console.error("Error connecting to Stripe:", error);
+    }
+  };
   return (
     <div className="w-full flex flex-col items-center pt-10 min-h-screen">
       {/* Stepper */}
@@ -414,6 +431,26 @@ const SignUp = () => {
                 )}
               </div>
             </>
+          )}
+          {activeStep === 2 && (
+            <CreateShop sellerId={sellerId} setActiveStep={setActiveStep} />
+          )}
+          {activeStep === 3 && (
+            <div>
+              <h2 className="text-2xl font-bold text-green-950 mb-4 text-center">
+                Connect Your Bank
+              </h2>
+              <p className="text-center text-gray-600 mb-6">
+                To start receiving payments, please connect your bank account.
+              </p>
+              <br />
+              <button
+                onClick={connectStripe}
+                className="w-full bg-green-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-green-600 transition-colors flex items-center justify-center gap-2"
+              >
+                Connect With Stripe <StripeLogo className="w-5 h-5" />
+              </button>
+            </div>
           )}
         </div>
       </div>

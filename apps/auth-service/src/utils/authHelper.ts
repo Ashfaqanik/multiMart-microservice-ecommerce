@@ -10,13 +10,13 @@ export const validateRegistrationData = (
   data: any,
   userType: "user" | "seller"
 ) => {
-  const { name, email, password, phone_number, country } = data;
+  const { name, email, password, phone, country } = data;
 
   if (
     !name ||
     !email ||
     !password ||
-    (userType === "seller" && (!phone_number || !country))
+    (userType === "seller" && (!phone || !country))
   ) {
     throw new ValidationError(`Missing required fields`);
   }
@@ -136,14 +136,21 @@ export const handleForgotPassword = async (
     }
 
     const user =
-      userType === "user" &&
-      (await prisma.users.findUnique({ where: { email } }));
+      userType === "user"
+        ? await prisma.users.findUnique({ where: { email } })
+        : await prisma.sellers.findUnique({ where: { email } });
     if (!user) {
       throw new ValidationError(`${userType} not found`, 404);
     }
     await checkOtpRestrictions(email, next);
     await trackOtpRequests(email, next);
-    await sendOtp(user.name, email, "forgot-password-user-mail");
+    await sendOtp(
+      user.name,
+      email,
+      userType === "user"
+        ? "forgot-password-user-mail"
+        : "forgot-password-seller-mail"
+    );
 
     res.status(200).json({
       message: "OTP sent to email successfully. Please verify your account",

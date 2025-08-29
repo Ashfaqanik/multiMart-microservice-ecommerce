@@ -38,6 +38,7 @@
     "react-hook": "^0.0.1",
     "react-hook-form": "^7.62.0",
     "react-hot-toast": "^2.5.2",
+    "stripe": "^18.5.0",
     "swagger-autogen": "^2.23.7",
     "swagger-ui-express": "^5.0.1"
   },

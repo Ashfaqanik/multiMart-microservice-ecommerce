@@ -12,7 +12,9 @@ model images {
     file_id String
     url String
     userId String? @db.ObjectId @unique
+    shopId String? @db.ObjectId @unique
     users users? @relation(fields: [userId], references: [id])
+    shops shops? @relation(fields: [shopId], references: [id])
 }
 
 model users {
@@ -24,4 +26,48 @@ model users {
     avatar images?
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
+}
+
+model ShopReviews{
+    id String @id @default(auto()) @map("_id") @db.ObjectId
+    shopId String @db.ObjectId
+    userId String @db.ObjectId
+    rating Float
+    comment String?
+    reviews String?
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    shops shops? @relation(fields: [shopId], references: [id])
+}
+
+model shops {
+    id String @id @default(auto()) @map("_id") @db.ObjectId
+    name String
+    bio String?
+    category String
+    avatar images? 
+    coverBanner String?
+    address String?
+    opening_hours String?
+    website String?
+    social_links String[]
+    ratings Float @default(0)
+    reviews ShopReviews[] 
+    sellerId String @db.ObjectId @unique
+    sellers sellers @relation(fields: [sellerId], references: [id])
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+model sellers {
+    id String @id @default(auto()) @map("_id") @db.ObjectId
+    name String
+    email String @unique
+    phone String @unique
+    country String
+    password String
+    stripId String?
+    shop shops?
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    shopId String? @db.ObjectId @unique
 }
