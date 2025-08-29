@@ -20,13 +20,7 @@
     "rootDir": "src",
     "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
   },
-  "include": [
-    "next-env.d.ts",
-    "src/**/*.js",
-    "src/**/*.jsx",
-    "src/**/*.ts",
-    "src/**/*.tsx"
-  ],
+  "include": ["next-env.d.ts", "src", ".next/types/**/*.ts"],
   "exclude": [
     "out-tsc",
     "dist",
@@ -34,6 +28,6 @@
     "jest.config.ts",
     "src/**/*.spec.ts",
     "src/**/*.test.ts",
-    ".next"
+    ".next/cache"
   ]
 }
