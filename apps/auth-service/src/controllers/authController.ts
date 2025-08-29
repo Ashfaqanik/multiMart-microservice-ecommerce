@@ -91,7 +91,7 @@ export const loginUser = async (
   next: NextFunction
 ) => {
   try {
-    const { email, password, rememberMe } = req.body; // <-- get it here
+    const { email, password, rememberMe } = req.body;
 
     if (!email || !password) {
       return next(new ValidationError("Email and password are required", 400));
@@ -410,8 +410,8 @@ export const createStripeConnection = async (
     });
     const accountLink = await stripe.accountLinks.create({
       account: account.id,
-      refresh_url: `http://localhost:3000/refresh`,
-      return_url: `http://localhost:3000/success`,
+      refresh_url: `http://localhost:4200/success`,
+      return_url: `http://localhost:4200/success`,
       type: "account_onboarding",
     });
 
@@ -463,6 +463,7 @@ export const loginSeller = async (
         expiresIn: "7d",
       }
     );
+
     //store refresh token and access token
     setCookie(res, "seller-refresh-token", refreshToken);
     setCookie(res, "seller-access-token", token);

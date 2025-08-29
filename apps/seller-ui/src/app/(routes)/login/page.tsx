@@ -31,7 +31,7 @@ const Login = () => {
   const loginMutation = useMutation({
     mutationFn: async (data: FormData) => {
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_SERVER_URI}/api/login-user`,
+        `${process.env.NEXT_PUBLIC_SERVER_URI}/api/login-seller`,
         data,
         { withCredentials: true }
       );
@@ -50,7 +50,7 @@ const Login = () => {
   });
 
   const onSubmit = (data: FormData) => {
-    loginMutation.mutate(data); // rememberMe is included automatically
+    loginMutation.mutate(data);
   };
 
   return (
