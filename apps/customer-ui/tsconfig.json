@@ -17,7 +17,7 @@
       "@/*": ["./src/*"]
     },
     "outDir": "dist",
-    "rootDir": "src",
+    "rootDir": ".",
     "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
   },
   "include": ["next-env.d.ts", "src", ".next/types/**/*.ts"],
